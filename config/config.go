@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	LOG_FORMAT  string
 	SECRET_KEY  string
 	BUFFER_SIZE int
 	PORT        uint64
@@ -17,6 +18,7 @@ func init() {
 	var err error
 
 	SECRET_KEY = os.Getenv("SOCKEM_SECRET_KEY")
+	LOG_FORMAT = os.Getenv("SOCKEM_LOG_FORMAT")
 
 	bufSize, found := os.LookupEnv("SOCKEM_BUFFER_SIZE")
 	if found {

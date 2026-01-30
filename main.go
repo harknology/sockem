@@ -4,6 +4,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"farthergate.com/sockem/config"
 	"farthergate.com/sockem/data"
@@ -34,6 +35,10 @@ func ws(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	if config.LOG_FORMAT == "json" {
+		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	}
+
 	http.HandleFunc("/ws", ws)
 
 	slog.Info("listen", "addr", config.ListenAddr())
