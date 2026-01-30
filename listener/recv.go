@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func RecvLoop(c *websocket.Conn, messages chan data.PassedMessage) {
+func RecvLoop(c *websocket.Conn, messages []chan data.PassedMessage) {
 	defer c.Close()
 
 	authenticated := false
@@ -19,7 +19,13 @@ func RecvLoop(c *websocket.Conn, messages chan data.PassedMessage) {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
 			slog.Error("recv", "error", err)
-			continue
+			for _, channel := range messages {
+				channel <- data.PassedMessage{
+					InternalMessage: data.CLOSE,
+					Conn:            c,
+				}
+			}
+			break
 		}
 
 		var parsed data.Message
@@ -36,6 +42,9 @@ func RecvLoop(c *websocket.Conn, messages chan data.PassedMessage) {
 			case "authenticate":
 				if parsed.Data == config.SECRET_KEY {
 					authenticated = true
+					c.WriteMessage(mt, []byte(`{"__success":"authenticated"}`))
+				} else {
+					c.WriteMessage(mt, []byte(`{"error":"invalid secret key"}`))
 				}
 				internalMsgE = data.AUTHENTICATE
 				goto pushMessage // pass this on to the send loop
@@ -55,10 +64,15 @@ func RecvLoop(c *websocket.Conn, messages chan data.PassedMessage) {
 			continue
 		}
 
-		messages <- data.PassedMessage{
-			Parsed:          parsed,
-			InternalMessage: internalMsgE,
-			Authenticated:   authenticated,
+		slog.Info("broadcast", "channel", parsed.Name)
+
+		for _, channel := range messages {
+			channel <- data.PassedMessage{
+				Parsed:          parsed,
+				InternalMessage: internalMsgE,
+				Authenticated:   authenticated,
+				Conn:            c,
+			}
 		}
 	}
 }

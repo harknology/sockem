@@ -17,6 +17,8 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: config.BUFFER_SIZE,
 }
 
+var channels = make([]chan data.PassedMessage, 0)
+
 func ws(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -25,9 +27,10 @@ func ws(w http.ResponseWriter, r *http.Request) {
 	}
 
 	channel := make(chan data.PassedMessage)
+	channels = append(channels, channel)
 
 	go sender.SendLoop(conn, channel)
-	go listener.RecvLoop(conn, channel)
+	go listener.RecvLoop(conn, channels)
 }
 
 func main() {
