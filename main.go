@@ -10,6 +10,7 @@ import (
 	"farthergate.com/sockem/data"
 	"farthergate.com/sockem/listener"
 	"farthergate.com/sockem/sender"
+	"farthergate.com/sockem/state"
 	"github.com/gorilla/websocket"
 )
 
@@ -18,8 +19,6 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: config.BUFFER_SIZE,
 }
 
-var channels = make([]chan data.PassedMessage, 0)
-
 func ws(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -27,11 +26,14 @@ func ws(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	channel := make(chan data.PassedMessage)
-	channels = append(channels, channel)
+	slog.Info("connection established")
 
-	go sender.SendLoop(conn, channel)
-	go listener.RecvLoop(conn, channels)
+	channel := make(chan data.PassedMessage)
+
+	element := state.Channels.PushBack(channel)
+
+	go sender.SendLoop(conn, element)
+	go listener.RecvLoop(conn)
 }
 
 func main() {

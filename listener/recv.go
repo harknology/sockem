@@ -7,10 +7,11 @@ import (
 
 	"farthergate.com/sockem/config"
 	"farthergate.com/sockem/data"
+	"farthergate.com/sockem/state"
 	"github.com/gorilla/websocket"
 )
 
-func RecvLoop(c *websocket.Conn, messages []chan data.PassedMessage) {
+func RecvLoop(c *websocket.Conn) {
 	defer c.Close()
 
 	authenticated := false
@@ -19,7 +20,8 @@ func RecvLoop(c *websocket.Conn, messages []chan data.PassedMessage) {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
 			slog.Error("recv", "error", err)
-			for _, channel := range messages {
+			for e := state.Channels.Front(); e != nil; e = e.Next() {
+				channel := e.Value.(chan data.PassedMessage)
 				channel <- data.PassedMessage{
 					InternalMessage: data.CLOSE,
 					Conn:            c,
@@ -66,7 +68,8 @@ func RecvLoop(c *websocket.Conn, messages []chan data.PassedMessage) {
 
 		slog.Info("broadcast", "channel", parsed.Name)
 
-		for _, channel := range messages {
+		for e := state.Channels.Front(); e != nil; e = e.Next() {
+			channel := e.Value.(chan data.PassedMessage)
 			channel <- data.PassedMessage{
 				Parsed:          parsed,
 				InternalMessage: internalMsgE,

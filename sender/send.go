@@ -1,19 +1,25 @@
 package sender
 
 import (
+	"container/list"
 	"encoding/json"
 	"log/slog"
 	"slices"
 	"strings"
 
 	"farthergate.com/sockem/data"
+	"farthergate.com/sockem/state"
 	"github.com/gorilla/websocket"
 )
 
-func SendLoop(c *websocket.Conn, messages chan data.PassedMessage) {
-	defer c.Close()
+func SendLoop(c *websocket.Conn, element *list.Element) {
+	defer func() {
+		c.Close()
+		state.Channels.Remove(element)
+	}()
 
 	listeners := make([]string, 0)
+	messages := element.Value.(chan data.PassedMessage)
 
 	for {
 		msg := <-messages
