@@ -1,0 +1,9 @@
+---
+title: Documentation
+nav:
+  - Documentation:
+      - index
+
+nav-end:
+  Harknology: https://harknology.com
+  GitHub: https://github.com/harknology/sockem
