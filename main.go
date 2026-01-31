@@ -33,10 +33,14 @@ func ws(w http.ResponseWriter, r *http.Request) {
 	element := state.Channels.PushBack(channel)
 
 	go sender.SendLoop(conn, element)
-	go listener.RecvLoop(conn)
+	go listener.RecvLoop(conn, r)
 }
 
 func main() {
+	if !config.ClientAuthAllowed() {
+		slog.Warn("SOCKEM_CLIENT_KEY and SOCKEM_ALLOWED_HOSTS not both specified; client authentication will be disabled")
+	}
+
 	if config.LOG_FORMAT == "json" {
 		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 	}

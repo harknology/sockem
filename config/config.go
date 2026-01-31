@@ -4,14 +4,17 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var (
-	LOG_FORMAT  string
-	SECRET_KEY  string
-	BUFFER_SIZE int
-	PORT        uint64
-	HOST        string
+	LOG_FORMAT    string
+	SECRET_KEY    string
+	CLIENT_KEY    string
+	ALLOWED_HOSTS []string
+	BUFFER_SIZE   int
+	PORT          uint64
+	HOST          string
 )
 
 func init() {
@@ -19,6 +22,8 @@ func init() {
 
 	SECRET_KEY = os.Getenv("SOCKEM_SECRET_KEY")
 	LOG_FORMAT = os.Getenv("SOCKEM_LOG_FORMAT")
+	CLIENT_KEY = os.Getenv("SOCKEM_CLIENT_KEY")
+	ALLOWED_HOSTS = strings.Split(os.Getenv("SOCKEM_ALLOWED_HOSTS"), " ")
 
 	bufSize, found := os.LookupEnv("SOCKEM_BUFFER_SIZE")
 	if found {

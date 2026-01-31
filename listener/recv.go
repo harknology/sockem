@@ -3,6 +3,8 @@ package listener
 import (
 	"encoding/json"
 	"log/slog"
+	"net/http"
+	"slices"
 	"strings"
 
 	"farthergate.com/sockem/config"
@@ -11,7 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func RecvLoop(c *websocket.Conn) {
+func RecvLoop(c *websocket.Conn, r *http.Request) {
 	defer c.Close()
 
 	authenticated := false
@@ -42,7 +44,7 @@ func RecvLoop(c *websocket.Conn) {
 		if internalMsg != parsed.Name {
 			switch internalMsg {
 			case "authenticate":
-				if parsed.Data == config.SECRET_KEY {
+				if parsed.Data == config.SECRET_KEY || (config.ClientAuthAllowed() && slices.Contains(config.ALLOWED_HOSTS, r.Host) && parsed.Data == config.CLIENT_KEY) {
 					authenticated = true
 					c.WriteMessage(mt, []byte(`{"__success":"authenticated"}`))
 				} else {
