@@ -37,12 +37,12 @@ func ws(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	if !config.ClientAuthAllowed() {
-		slog.Warn("SOCKEM_CLIENT_KEY and SOCKEM_ALLOWED_HOSTS not both specified; client authentication will be disabled")
-	}
-
 	if config.LOG_FORMAT == "json" {
 		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	}
+
+	if !config.ClientAuthAllowed() {
+		slog.Warn("SOCKEM_CLIENT_KEY and SOCKEM_ALLOWED_HOSTS not both specified; client authentication will be disabled")
 	}
 
 	http.HandleFunc("/ws", ws)
